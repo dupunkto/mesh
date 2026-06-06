@@ -26,34 +26,32 @@ function consensus(results) {
       let status = "down";
       let detail = "unreachable from browser";
       let title = "";
-      
+
       if (observers.length > 0) {
         detail += `, up for ${observers.length - downFrom.length}/${observers.length} peers`;
         status = observers.length == downFrom.length ? "down" : "partial";
-      }
-      else {
+      } else {
         detail += " (no peers)";
       }
 
-      if(downFrom.length > 0) {
+      if (downFrom.length > 0) {
         title = `unreachable from: ${downFrom.map((o) => o.peer).join(", ")}`;
       }
 
       return { target, status, detail, title };
-    }
-    else {
+    } else {
       let status = "up";
       let detail = "reachable from browser";
       let title = "";
 
       if (observers.length > 0) {
         detail += ` and ${observers.length - downFrom.length}/${observers.length} peers`;
-        if(downFrom.length > 0) status = "partial";
+        if (downFrom.length > 0) status = "partial";
       } else {
         detail += " (no peers)";
       }
 
-      if(downFrom.length > 0) {
+      if (downFrom.length > 0) {
         title = `unreachable from: ${downFrom.map((o) => o.peer).join(", ")}`;
       }
 
@@ -71,45 +69,70 @@ function render(rows) {
       tr.className = row.status;
       tr.innerHTML = `<td>${row.target}</td><td title="${row.title}">${row.detail}</td><td>${row.status}</td>`;
       return tr;
-    }),
+    })
   );
 
-  document.querySelector("#meta").textContent =
-    `last updated at ${new Date().toLocaleTimeString()}`;
+  document.querySelector("#meta").textContent = `last updated at ${new Date().toLocaleTimeString()}`;
 }
 
-function buildGraph(results) {
+function renderGraph(results) {
   const byPeer = new Map(results.map((r) => [r.peer, r]));
-  const id = (peer) => peer.replace(/[^a-zA-Z0-9]/g, "_");
+  const normalize = (v) => (v === "up" || v === "down" ? v : "unknown");
+  const colors = { up: "#2a7", down: "#c33", unknown: "#888" };
 
-  const lines = ["flowchart LR"];
+  const nodes = PEERS.map((peer) => {
+    const observers = PEERS.filter((from) => from !== peer);
+    const hasDown = observers.length > 0 && observers.every((from) => normalize(byPeer.get(from)?.data?.peers?.[peer]?.status) === "down");
+    return { data: { id: peer, label: peer.split(".")[0], bg: hasDown ? "#c33" : "#fff", fg: hasDown ? "#fff" : getComputedStyle(document.body).color } };
+  });
 
-  for (const peer of PEERS)
-    lines.push(`  ${id(peer)}["${peer}"]`);
-
-  const statuses = [];
+  const edges = [];
   for (const from of PEERS) {
     for (const to of PEERS) {
-      if (from == to) continue;
-      const view = byPeer.get(from)?.data?.peers?.[to]?.status;
-      const status = view == "up" || view == "down" ? view : "unknown";
-      lines.push(`  ${id(from)} -->|${status}| ${id(to)}`);
-      statuses.push(status);
+      if (from === to) continue;
+      const status = normalize(byPeer.get(from)?.data?.peers?.[to]?.status);
+      edges.push({
+        data: { id: `${from}->${to}`, source: from, target: to, color: colors[status] }
+      });
     }
   }
 
-  const colors = { up: "#2a7", down: "#c33", unknown: "#888" };
-  statuses.forEach((s, i) => {
-    lines.push(`  linkStyle ${i} stroke:${colors[s]},stroke-width:3px,color:${colors[s]}`);
+  const cy = cytoscape({
+    container: document.querySelector("#graph"),
+    elements: { nodes, edges },
+    layout: { name: "circle", fit: true, padding: 40 },
+    userZoomingEnabled: false,
+    userPanningEnabled: false,
+    style: [
+      {
+        selector: "node",
+        style: {
+          label: "data(label)",
+          "font-family": getComputedStyle(document.body).fontFamily,
+          "text-valign": "center",
+          "background-color": "data(bg)",
+          "border-width": 1,
+          "border-color": getComputedStyle(document.body).color,
+          color: "data(fg)",
+          shape: "rectangle",
+          width: 60,
+          height: 28
+        }
+      },
+      {
+        selector: "edge",
+        style: {
+          "line-color": "data(color)",
+          "target-arrow-color": "data(color)",
+          "target-arrow-shape": "triangle",
+          "curve-style": "bezier",
+          width: 3
+        }
+      }
+    ]
   });
-
-  return lines.join("\n");
-}
-
-async function renderGraph(results) {
-  mermaid.initialize({ startOnLoad: false, theme: "neutral" });
-  const { svg } = await mermaid.render("graph-svg", buildGraph(results));
-  document.querySelector("#graph").innerHTML = svg;
+  cy.resize();
+  cy.fit(undefined, 40);
 }
 
 Promise.all(PEERS.map(probe)).then((results) => {

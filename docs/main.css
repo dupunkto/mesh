@@ -1,19 +1,24 @@
 body {
-  max-width: 660px;
-}
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 1em;
 
-main {
-  width: 100%;
 }
 
 #meta {
-  opacity: 0.6;
+  opacity: 0.5;
   font-size: 0.9em;
 }
 
 #nodes {
   width: 100%;
   margin: 2em 0;
+  border-collapse: collapse;
+}
+
+#nodes th,
+#nodes td {
+  padding: 0.25em 0;
 }
 
 #nodes td:not(:last-of-type) {
@@ -22,12 +27,11 @@ main {
 
 #nodes th {
   font-weight: bold;
-  color: #555;
+  opacity: 0.5;
 }
 
 #nodes tr td:nth-child(3) {
   font-weight: bold;
-  text-align: center;
 }
 
 #nodes tr.up td:nth-child(3) {
@@ -44,4 +48,14 @@ main {
 
 #nodes tr.unknown td:nth-child(3) {
   color: #888;
+}
+
+#graph {
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+}
+
+#graph canvas {
+  left: 0;
 }
