@@ -31,7 +31,7 @@ function consensus(results) {
         status = observers.length == downFrom.length ? "down" : "partial";
       }
       else {
-        detail += " (no peer observations available)";
+        detail += " (no peers)";
       }
 
       if(downFrom.length > 0) {
