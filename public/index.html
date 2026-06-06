@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Google, please don't mess with my lovingly handcrafted HTML -->
+    <meta name="googlebot" content="notranslate">
+
+    <title>Mesh</title>
+
+    <link rel="canonical" href="https://mesh.dupunkto.org">
+    <link rel="stylesheet" href="https://cdn.geheimesite.nl/landing.css">
+    <link rel="stylesheet" href="main.css">
+  </head>
+  <body>
+    <main>
+      <hgroup>
+        <h1>{du}punkto mesh status</h1>
+        <p id="meta">loading...</p>
+      </hgroup>
+
+      <table id="nodes">
+        <thead>
+          <tr>
+            <th>node</th>
+            <th>detail</th>
+            <th>status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div id="graph"></div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
+    <script src="app.js" defer></script>
+  </body>
+</html>

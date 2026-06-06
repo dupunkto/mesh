@@ -1,0 +1,47 @@
+body {
+  max-width: 650px;
+}
+
+main {
+  width: 100%;
+}
+
+#meta {
+  opacity: 0.6;
+  font-size: 0.9em;
+}
+
+#nodes {
+  width: 100%;
+  margin: 2em 0;
+}
+
+#nodes td:not(:last-of-type) {
+  padding-right: 2em;
+}
+
+#nodes th {
+  font-weight: bold;
+  color: #555;
+}
+
+#nodes tr td:nth-child(3) {
+  font-weight: bold;
+  text-align: center;
+}
+
+#nodes tr.up td:nth-child(3) {
+  color: #2a7;
+}
+
+#nodes tr.down td:nth-child(3) {
+  color: #c33;
+}
+
+#nodes tr.partial td:nth-child(3) {
+  color: #d80;
+}
+
+#nodes tr.unknown td:nth-child(3) {
+  color: #888;
+}
