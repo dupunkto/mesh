@@ -4,6 +4,10 @@ defmodule MeshWeb.APIController do
 
   alias Mesh.Store
 
+  def root(conn, _params) do
+    redirect(conn, external: Mesh.mesh())
+  end
+
   def ping(conn, _params) do
     json(conn, %{pong: true})
   end

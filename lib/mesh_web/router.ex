@@ -9,6 +9,7 @@ defmodule MeshWeb.Router do
   scope "/", MeshWeb do
     pipe_through :api
 
+    get "/", APIController, :root
     get "/ping", APIController, :ping
     get "/state", APIController, :state
   end

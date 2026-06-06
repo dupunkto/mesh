@@ -3,11 +3,13 @@ defmodule Mesh do
   Distributed uptime monitoring.
   """
 
-  @doc """
-  Returns this node's identifier, used as the sender in notifications and as
-  the `node` field in `/state` responses. Falls back to the system hostname
-  if `:node` is unset.
-  """
+  @doc false
+  @spec mesh() :: String.t()
+  def mesh do
+    Application.get_env(:mesh, :mesh_url) || "https://mesh.dupunkto.org"
+  end
+
+  @doc false
   @spec me() :: String.t()
   def me do
     Application.get_env(:mesh, :node) || hostname()
