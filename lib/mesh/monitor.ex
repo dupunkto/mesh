@@ -7,7 +7,8 @@ defmodule Mesh.Monitor do
 
   require Logger
 
-  @interval :timer.seconds(5)
+  @poll_interval :timer.seconds(5)
+  @followup_interval :timer.minutes(30)
   @timeout :timer.seconds(5)
   @threshold 4 # send down notification after 3 missed pings
 
@@ -17,7 +18,7 @@ defmodule Mesh.Monitor do
 
   @impl true
   def init(peer) do
-    schedule(0)
+    schedule_poll(0)
     {:ok, peer}
   end
 
@@ -28,7 +29,13 @@ defmodule Mesh.Monitor do
       {:error, reason} -> on_failure(peer, reason)
     end
 
-    schedule(@interval)
+    schedule_poll(@poll_interval)
+    {:noreply, peer}
+  end
+
+  @impl true
+  def handle_info(:followup, peer) do
+    on_followup(peer)
     {:noreply, peer}
   end
 
@@ -78,12 +85,24 @@ defmodule Mesh.Monitor do
     if failures >= @threshold and state.status != :down do
       Store.put(peer, %{state | status: :down, since: now, consecutive_failures: failures})
       Notifier.notify(peer, :down)
+      schedule_followup(@followup_interval)
     else
       Store.put(peer, %{state | consecutive_failures: failures})
     end
   end
 
-  defp schedule(delay) do
+  defp on_followup(peer) do
+    if Store.get(peer).status == :down do
+      Notifier.notify(peer, :still_down)
+      schedule_followup(@followup_interval)
+    end
+  end
+
+  defp schedule_poll(delay) do
     Process.send_after(self(), :poll, delay)
+  end
+
+  defp schedule_followup(delay) do
+    Process.send_after(self(), :followup, delay)
   end
 end
