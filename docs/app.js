@@ -68,7 +68,7 @@ function render(rows) {
     ...rows.map((row) => {
       const tr = document.createElement("tr");
       tr.className = row.status;
-      tr.innerHTML = `<td>${row.target}</td><td>${row.detail}</td><td>${row.status}</td>`;
+      tr.innerHTML = `<td>${row.target}</td><td title="${row.title}">${row.detail}</td><td>${row.status}</td>`;
       return tr;
     }),
   );
