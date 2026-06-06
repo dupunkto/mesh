@@ -5,7 +5,7 @@ defmodule MeshWeb.APIController do
   alias Mesh.Store
 
   def root(conn, _params) do
-    redirect(conn, external: Mesh.mesh())
+    redirect(conn, external: Mesh.aggregator())
   end
 
   def ping(conn, _params) do

@@ -28,7 +28,7 @@ peers =
 config :mesh,
   node: System.get_env("NODE"),
   peers: peers,
-  mesh_url: System.get_env("MESH"),
+  aggregator_url: System.get_env("AGGREGATOR_URL"),
   webhook_url: System.get_env("WEBHOOK_URL")
 
 if config_env() == :prod do

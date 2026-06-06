@@ -38,14 +38,13 @@ defmodule Mesh do
 
   Configure the following environment variables:
 
-    - `PEERS`: comma-separated peer hostnames. If not given, nothing will be monitored.
+    - `PEERS`: comma-separated peer hostnames. Required, but if not given, the app will start without monitoring anything.
 
-    - `WEBHOOK_URL`: optional Discord or Slack incoming webhook for
-      notifications.
+    - `WEBHOOK_URL`: optional Discord or Slack incoming webhook for notifications. See more in the following section.
+
     - `NODE`: a unique identifier for the node. Used in webhook messages and returned in the `node` field of `/state`. Defaults to the system hostname if not given.
 
-    - `MESH`: a URL to the mesh aggregator. This is only used to redirect from `/` to the aggregator page. Defaults to
-      `https://mesh.dupunkto.org` if not given.
+    - `AGGREGATOR_URL`: a URL to the mesh aggregator. This is only used to redirect from `/` to the aggregator page. Defaults to `https://mesh.dupunkto.org` if not given.
 
   A prebuilt docker image is available at [ghcr.io/dupunkto/mesh](https://github.com/dupunkto/mesh/pkgs/container/mesh).
 
@@ -70,9 +69,9 @@ defmodule Mesh do
   """
 
   @doc false
-  @spec mesh() :: String.t()
-  def mesh do
-    Application.get_env(:mesh, :mesh_url) || "https://mesh.dupunkto.org"
+  @spec aggregator() :: String.t()
+  def aggregator do
+    Application.get_env(:mesh, :aggregator_url) || "https://mesh.dupunkto.org"
   end
 
   @doc false
