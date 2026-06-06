@@ -1,6 +1,7 @@
 const PEERS = [
   "nov.mesh.dupunkto.org",
-  "dec.mesh.dupunkto.org"
+  "dec.mesh.dupunkto.org",
+  "jun.mesh.dupunkto.org"
 ];
 
 async function probe(peer) {
