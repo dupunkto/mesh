@@ -74,7 +74,7 @@ function render(rows) {
   );
 
   document.querySelector("#meta").textContent =
-    `last updated: ${new Date().toLocaleTimeString()}`;
+    `last updated at ${new Date().toLocaleTimeString()}`;
 }
 
 function buildGraph(results) {
