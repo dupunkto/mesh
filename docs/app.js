@@ -49,7 +49,7 @@ function consensus(results) {
         detail += ` and ${observers.length - downFrom.length}/${observers.length} peers`;
         if(downFrom.length > 0) status = "partial";
       } else {
-        detail += " (no peer observations available)";
+        detail += " (no peers)";
       }
 
       if(downFrom.length > 0) {
