@@ -7,9 +7,9 @@ defmodule Mesh.Monitor do
 
   require Logger
 
-  @interval :timer.seconds(10)
+  @interval :timer.seconds(5)
   @timeout :timer.seconds(5)
-  @threshold 3 # send down notification after 3 missed pings
+  @threshold 4 # send down notification after 3 missed pings
 
   def start_link(peer) do
     GenServer.start_link(__MODULE__, peer)
