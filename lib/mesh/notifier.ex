@@ -15,6 +15,6 @@ defmodule Mesh.Notifier do
     end
   end
 
-  defp content(peer, :up), do: "`#{Mesh.me()}` -> `#{peer}` is **up**"
-  defp content(peer, :down), do: "`#{Mesh.me()}` -> `#{peer}` is **down**"
+  defp content(peer, :up), do: "🟩 `#{peer}` can be reached by `#{Mesh.me()}`"
+  defp content(peer, :down), do: "🟥 `#{peer}` cannot be reached by `#{Mesh.me()}`"
 end
