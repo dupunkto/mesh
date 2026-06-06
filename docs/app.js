@@ -27,7 +27,7 @@ function consensus(results) {
       let title = "";
       
       if (observers.length > 0) {
-        detail += ` and ${downFrom.length}/${observers.length} peers`;
+        detail += `, up for ${observers.length - downFrom.length}/${observers.length} peers`;
         status = observers.length == downFrom.length ? "down" : "partial";
       }
       else {
