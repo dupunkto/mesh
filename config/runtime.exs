@@ -25,6 +25,10 @@ peers =
   |> String.split(",", trim: true)
   |> Enum.map(&String.trim/1)
 
+if peers == [] do
+  raise "No peers were configured, aborting."
+end
+
 config :mesh,
   node: System.get_env("NODE"),
   peers: peers,

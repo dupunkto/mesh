@@ -38,7 +38,7 @@ defmodule Mesh do
 
   Configure the following environment variables:
 
-    - `PEERS`: comma-separated peer hostnames. Required, but if not given, the app will start without monitoring anything.
+    - `PEERS`: comma-separated peer hostnames. Required, the app will not boot without.
 
     - `WEBHOOK_URL`: optional Discord or Slack incoming webhook for notifications. See more in the following section.
 
