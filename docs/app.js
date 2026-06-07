@@ -1,7 +1,8 @@
 const PEERS = [
   "nov.mesh.dupunkto.org",
   "dec.mesh.dupunkto.org",
-  "jun.mesh.dupunkto.org"
+  "jun.mesh.dupunkto.org",
+  "feb.mesh.dupunkto.org"
 ];
 
 async function probe(peer) {
@@ -83,7 +84,7 @@ function renderGraph(results) {
   const nodes = PEERS.map((peer) => {
     const observers = PEERS.filter((from) => from !== peer);
     const hasDown = observers.length > 0 && observers.every((from) => normalize(byPeer.get(from)?.data?.peers?.[peer]?.status) === "down");
-    return { data: { id: peer, label: peer.split(".")[0], bg: hasDown ? "#c33" : "#fff", fg: hasDown ? "#fff" : getComputedStyle(document.body).color } };
+    return { data: { id: peer, label: peer, bg: hasDown ? "#c33" : "#fff", fg: hasDown ? "#fff" : getComputedStyle(document.body).color } };
   });
 
   const edges = [];
@@ -100,7 +101,7 @@ function renderGraph(results) {
   const cy = cytoscape({
     container: document.querySelector("#graph"),
     elements: { nodes, edges },
-    layout: { name: "circle", fit: true, padding: 40 },
+    layout: { name: "circle", fit: true, padding: 10 },
     userZoomingEnabled: false,
     userPanningEnabled: false,
     style: [
@@ -115,8 +116,8 @@ function renderGraph(results) {
           "border-color": getComputedStyle(document.body).color,
           color: "data(fg)",
           shape: "rectangle",
-          width: 60,
-          height: 28
+          width: 200,
+          height: 30
         }
       },
       {
@@ -132,7 +133,7 @@ function renderGraph(results) {
     ]
   });
   cy.resize();
-  cy.fit(undefined, 40);
+  cy.fit(undefined, 10);
 }
 
 Promise.all(PEERS.map(probe)).then((results) => {
