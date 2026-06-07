@@ -84,7 +84,7 @@ function renderGraph(results) {
   const nodes = PEERS.map((peer) => {
     const observers = PEERS.filter((from) => from !== peer);
     const hasDown = observers.length > 0 && observers.every((from) => normalize(byPeer.get(from)?.data?.peers?.[peer]?.status) === "down");
-    return { data: { id: peer, label: peer, bg: hasDown ? "#c33" : "#fff", fg: hasDown ? "#fff" : getComputedStyle(document.body).color } };
+    return { data: { id: peer, label: peer, bg: hasDown ? "#c33" : "#fff", fg: hasDown ? "#fff" : "#000" } };
   });
 
   const edges = [];
@@ -113,7 +113,7 @@ function renderGraph(results) {
           "text-valign": "center",
           "background-color": "data(bg)",
           "border-width": 1,
-          "border-color": getComputedStyle(document.body).color,
+          "border-color": "#000",
           color: "data(fg)",
           shape: "rectangle",
           width: 200,
