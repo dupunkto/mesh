@@ -20,8 +20,8 @@ function consensus(results) {
 
   return PEERS.map((target) => {
     const self = byPeer.get(target);
-    const observers = results.filter((r) => r.peer != target && r.reachable);
-    const downFrom = observers.filter((o) => o.data.peers?.[target]?.status == "down");
+    const observers = results.filter((r) => r.peer != target && r.reachable && r.data.peers?.[target]);
+    const downFrom = observers.filter((o) => o.data.peers[target].status == "down");
 
     if (!self.reachable) {
       let status = "down";
