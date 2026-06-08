@@ -82,8 +82,8 @@ function renderGraph(results) {
   const colors = { up: "#2a7", down: "#c33", unknown: "#888" };
 
   const nodes = PEERS.map((peer) => {
-    const observers = PEERS.filter((from) => from !== peer);
-    const hasDown = observers.length > 0 && observers.every((from) => normalize(byPeer.get(from)?.data?.peers?.[peer]?.status) === "down");
+    const observers = PEERS.filter((from) => from !== peer && byPeer.get(from)?.reachable && byPeer.get(from)?.data?.peers?.[peer]);
+    const hasDown = observers.length > 0 && observers.every((from) => normalize(byPeer.get(from).data.peers[peer].status) === "down");
     return { data: { id: peer, label: peer, bg: hasDown ? "#c33" : "#fff", fg: hasDown ? "#fff" : "#000" } };
   });
 
