@@ -56,6 +56,8 @@ defmodule Mesh.Monitor do
         Store.put(peer, %{current | last_seen: now, consecutive_failures: 0})
 
       :down ->
+        downtime_since = current.since
+
         Store.put(peer, %{
           status: :up,
           since: now,
@@ -63,7 +65,7 @@ defmodule Mesh.Monitor do
           consecutive_failures: 0
         })
 
-        Notifier.notify(peer, :up)
+        Notifier.notify(peer, :up, downtime_since: downtime_since)
 
       :unknown ->
         Store.put(peer, %{
