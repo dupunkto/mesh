@@ -127,6 +127,7 @@ function renderGraph(results) {
           "target-arrow-color": "data(color)",
           "target-arrow-shape": "triangle",
           "curve-style": "bezier",
+          "arrow-scale": 1.5,
           width: 3
         }
       }
