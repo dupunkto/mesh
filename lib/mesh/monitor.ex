@@ -10,7 +10,8 @@ defmodule Mesh.Monitor do
   @poll_interval :timer.seconds(5)
   @followup_interval :timer.minutes(30)
   @timeout :timer.seconds(5)
-  @threshold 4 # send down notification after 4 missed pings
+  # send down notification after 4 missed pings
+  @threshold 4
 
   def start_link(peer) do
     GenServer.start_link(__MODULE__, peer)
@@ -29,6 +30,7 @@ defmodule Mesh.Monitor do
       {:error, reason} -> on_failure(peer, reason)
     end
 
+    Mesh.Relay.poll_complete(peer)
     schedule_poll(@poll_interval)
     {:noreply, peer}
   end

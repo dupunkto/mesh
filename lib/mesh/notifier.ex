@@ -10,9 +10,14 @@ defmodule Mesh.Notifier do
       body = %{content: content(peer, status, opts)}
 
       case Req.post(url, json: body, retry: false) do
-        {:ok, %{status: status}} when status in 200..299 -> :ok
-        {:ok, %{status: status}} -> Logger.error("webhook crashed :$ (HTTP #{status})")
-        {:error, reason} -> Logger.error("webhook unreachable :$ (network error)\n\n#{inspect(reason)}")
+        {:ok, %{status: status}} when status in 200..299 ->
+          :ok
+
+        {:ok, %{status: status}} ->
+          Logger.error("webhook crashed :$ (HTTP #{status})")
+
+        {:error, reason} ->
+          Logger.error("webhook unreachable :$ (network error)\n\n#{inspect(reason)}")
       end
     end
   end

@@ -12,5 +12,6 @@ defmodule MeshWeb.Router do
     get "/", APIController, :root
     get "/ping", APIController, :ping
     get "/state", APIController, :state
+    post "/relay", APIController, :relay
   end
 end

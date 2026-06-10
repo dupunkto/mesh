@@ -9,7 +9,8 @@ defmodule Mesh.Application do
         MeshWeb.Telemetry,
         {Phoenix.PubSub, name: Mesh.PubSub},
         MeshWeb.Endpoint,
-        {Mesh.Store, peers()}
+        {Mesh.Store, peers()},
+        {Mesh.Relay, peers()}
       ]
 
     opts = [strategy: :one_for_one, name: Mesh.Supervisor]

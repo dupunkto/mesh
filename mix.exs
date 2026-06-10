@@ -59,7 +59,7 @@ defmodule Mesh.MixProject do
       {:req, "~> 0.5"},
 
       # For documentation :)
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end
 
