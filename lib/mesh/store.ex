@@ -4,7 +4,12 @@ defmodule Mesh.Store do
 
   @type state :: %{
           peers: %{String.t() => peer_state()},
-          relays: %{String.t() => peer_state()}
+          relays: %{
+            String.t() => %{
+              received_at: DateTime.t(),
+              peers: %{String.t() => peer_state()}
+            }
+          }
         }
 
   @type peer_state :: %{
@@ -50,8 +55,8 @@ defmodule Mesh.Store do
 
     peers = 
       Map.new(peers, fn peer ->
-          {peer, %{status: :unknown, since: now, last_seen: nil, consecutive_failures: 0}}
-        end)
+        {peer, %{status: :unknown, since: now, last_seen: nil, consecutive_failures: 0}}
+      end)
 
     {:ok, %{peers: peers, relays: %{}}}
   end
@@ -83,7 +88,7 @@ defmodule Mesh.Store do
   @doc false
   @impl true
   def handle_cast({:put_relay, from_peer, peers}, state) do
-    entry = %{relays_at: DateTime.utc_now(), peers: peers}
+    entry = %{received_at: DateTime.utc_now(), peers: peers}
     {:noreply, put_in(state, [:relays, from_peer], entry)}
   end
 end
