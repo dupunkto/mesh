@@ -6,13 +6,15 @@ Mesh is the distributed uptime monitor used by the {du}punkto network.
 
 ## Topology
 
-Every node runs an idential Mesh instance, which polls its peers on a fixed interval. There is no central coordinator or shared state, each node builds its own view of the cluster. An aggregator collects states, computes consensus, and renders them into an uptime graph.
+Every node runs an identical Mesh instance, which polls its peers on a fixed interval. There is no central coordinator or shared state, each node builds its own view of the cluster. An aggregator collects states, computes consensus, and renders them into an uptime graph.
 
 The implemented aggregator running at [mesh.dupunkto.org](https://mesh.dupunkto.org) is static HTML served by GitHub Pages, that uses the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) to pull states from all nodes in the cluster.
 
 > This means the status page is dependent on the network condition of the user, but it also prevents a single server, and thus a single point of failure.
 
 ## Endpoints
+
+- `GET /`: redirects to the `AGGREGATOR_URL`.
 
 - `GET /ping`: liveness probe, returns:
 
@@ -88,13 +90,19 @@ A prebuilt docker image is available at [ghcr.io/dupunkto/mesh](https://github.c
 Optional Discord or Slack webhooks can be configured using the `WEBHOOK_URL` environment variable. The payload looks like:
 
 ```json
-{"content": "🟥 `dec.mesh.dupunkto.org` cannot be reached by `nov.mesh.dupunkto.org`"}
+{"content": "🔴 `dec.mesh.dupunkto.org` is unreachable from `nov.mesh.dupunkto.org`"}
 ```
 
-Or, on recovery:
+On recovery, including how long the peer was unreachable:
 
 ```json
-{"content": "🟩 `dec.mesh.dupunkto.org` can be reached by `nov.mesh.dupunkto.org`"}
+{"content": "🟢 `dec.mesh.dupunkto.org` is reachable again from `nov.mesh.dupunkto.org` (was unreachable for 4m 32s)"}
+```
+
+If a peer remains unreachable, a follow-up is sent every 30 minutes:
+
+```json
+{"content": "🟠 `dec.mesh.dupunkto.org` is still unreachable from `nov.mesh.dupunkto.org` (35m 12s)"}
 ```
 
 This webhook will be called upon every status transition, except the initial change from `:unknown` to `:up` on application boot, to reduce log spam.
