@@ -55,7 +55,7 @@ function consensus(results) {
 
       const relay = relayStatus(results, target);
       if (relay === "fresh") detail += ", outbound fine";
-      else if (relay === "stale") detail += ", outbound down";
+      else if (relay === "stale") detail += ", outbound stale";
 
       return { target, status, detail, title };
     } else {
