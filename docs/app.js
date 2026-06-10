@@ -9,6 +9,8 @@ const POLL_INTERVAL_MS = 5_000;
 const RELAY_STALE_MS = 4 * POLL_INTERVAL_MS;
 const CLOCK_SKEW_MS = 2 * 60_000;
 
+const EDGE_COLORS = { up: "#2a7", down: "#c33", unknown: "#888" };
+
 async function probe(peer) {
   try {
     const res = await fetch(`https://${peer}/state`);
@@ -19,14 +21,14 @@ async function probe(peer) {
   }
 }
 
-function clockSkews(results) {
+function calculateClockSkews(results) {
   return new Map(results.map((r) => {
     if (!r.reachable || !r.data?.relay) return [r.peer, 0];
     let max = 0;
     for (const entry of Object.values(r.data.relay)) {
       const received = new Date(entry.received_at).getTime();
-      for (const peer of Object.values(entry.peers ?? {})) {
-        const skew = new Date(peer.last_seen).getTime() - received;
+      for (const info of Object.values(entry.peers ?? {})) {
+        const skew = new Date(info.last_seen).getTime() - received;
         if (skew > max) max = skew;
       }
     }
@@ -34,130 +36,100 @@ function clockSkews(results) {
   }));
 }
 
-function relayStatus(results, skews, target) {
+function resolveRelayStatus(results, skews, target) {
   let best = null;
   let bestAdjusted = -Infinity;
+
   for (const r of results) {
     if (!r.reachable || r.peer === target) continue;
     const entry = r.data?.relay?.[target];
     if (!entry) continue;
+
     const adjusted = new Date(entry.received_at).getTime() + (skews.get(r.peer) ?? 0);
     if (adjusted > bestAdjusted) {
       best = entry;
       bestAdjusted = adjusted;
     }
   }
+
   if (!best) return null;
   return Date.now() - bestAdjusted > RELAY_STALE_MS ? "stale" : "fresh";
 }
 
-function consensus(results, skews) {
+function renderTable(results, skews) {
   const byPeer = new Map(results.map((r) => [r.peer, r]));
 
-  return PEERS.map((target) => {
+  const rows = PEERS.map((target) => {
     const self = byPeer.get(target);
     const observers = results.filter((r) => r.peer !== target && r.reachable && r.data.peers?.[target]);
     const downFrom = observers.filter((o) => o.data.peers[target].status === "down");
+    const upCount = observers.length - downFrom.length;
 
-    if (!self.reachable) {
-      let status = "down";
-      let detail = "unreachable from browser";
-      let title = "";
+    const reachable = self.reachable;
+    let status = reachable ? "up" : "down";
+    let detail = reachable ? "reachable from browser" : "unreachable from browser";
 
-      if (observers.length > 0) {
-        detail += `, up for ${observers.length - downFrom.length}/${observers.length} peers`;
-        status = observers.length === downFrom.length ? "down" : "partial";
-      } else {
-        detail += " (no peers)";
-      }
+    if (observers.length > 0) {
+      detail += reachable
+        ? ` and ${upCount}/${observers.length} peers`
+        : `, up for ${upCount}/${observers.length} peers`;
+      if (reachable ? downFrom.length > 0 : upCount > 0) status = "partial";
+    } else {
+      detail += " (no peers)";
+    }
 
-      if (downFrom.length > 0) {
-        title = `unreachable from: ${downFrom.map((o) => o.peer).join(", ")}`;
-      }
-
-      const relay = relayStatus(results, skews, target);
+    if (!reachable) {
+      const relay = resolveRelayStatus(results, skews, target);
       if (relay === "fresh") detail += ", outbound fine";
       else if (relay === "stale") detail += ", outbound stale";
-
-      return { target, status, detail, title };
-    } else {
-      let status = "up";
-      let detail = "reachable from browser";
-      let title = "";
-
-      if (observers.length > 0) {
-        detail += ` and ${observers.length - downFrom.length}/${observers.length} peers`;
-        if (downFrom.length > 0) status = "partial";
-      } else {
-        detail += " (no peers)";
-      }
-
-      if (downFrom.length > 0) {
-        title = `unreachable from: ${downFrom.map((o) => o.peer).join(", ")}`;
-      }
-
-      return { target, status, detail, title };
     }
+
+    const title = downFrom.length > 0
+      ? `unreachable from: ${downFrom.map((o) => o.peer).join(", ")}`
+      : "";
+
+    return { target, status, detail, title };
   });
+
+  document.querySelector("#nodes tbody").replaceChildren(...rows.map((row) => {
+    const tr = document.createElement("tr");
+    tr.className = row.status;
+    tr.append(buildCell(row.target), buildCell(row.detail, row.title), buildCell(row.status));
+    return tr;
+  }));
+
+  document.querySelector("#meta").textContent =
+    `last updated at ${new Date().toLocaleTimeString()}`;
 }
 
-function render(rows) {
-  const table = document.querySelector("#nodes tbody");
-
-  table.replaceChildren(
-    ...rows.map((row) => {
-      const tr = document.createElement("tr");
-      tr.className = row.status;
-      tr.innerHTML = `<td>${row.target}</td><td${row.title ? ` title="${row.title}"` : ""}>${row.detail}</td><td>${row.status}</td>`;
-      return tr;
-    })
-  );
-
-  document.querySelector("#meta").textContent = `last updated at ${new Date().toLocaleTimeString()}`;
+function buildCell(text, title = null) {
+  const td = document.createElement("td");
+  td.textContent = text;
+  if (title) td.title = title;
+  return td;
 }
 
 function renderGraph(results, skews) {
   const byPeer = new Map(results.map((r) => [r.peer, r]));
-  const normalize = (v) => (v === "up" || v === "down" ? v : "unknown");
-  const colors = { up: "#2a7", down: "#c33", unknown: "#888" };
 
   const nodes = PEERS.map((peer) => {
-    const observers = PEERS.filter((from) => from !== peer && byPeer.get(from)?.reachable && byPeer.get(from)?.data?.peers?.[peer]);
-    const hasDown = observers.length > 0 && observers.every((from) => normalize(byPeer.get(from).data.peers[peer].status) === "down");
-    return { data: { id: peer, label: peer, bg: hasDown ? "#c33" : "#fff", fg: hasDown ? "#fff" : "#000" } };
+    const observers = PEERS.filter((from) =>
+      from !== peer && byPeer.get(from)?.reachable && byPeer.get(from)?.data?.peers?.[peer]
+    );
+    const allDown = observers.length > 0 &&
+      observers.every((from) => normalizeStatus(byPeer.get(from).data.peers[peer].status) === "down");
+
+    return { data: { id: peer, label: peer, bg: allDown ? "#c33" : "#fff", fg: allDown ? "#fff" : "#000" } };
   });
 
-  const edges = [];
-  for (const from of PEERS) {
-    for (const to of PEERS) {
-      if (from === to) continue;
-      let color, line_style;
-
-      if (byPeer.get(from)?.reachable) {
-        color = colors[normalize(byPeer.get(from).data.peers?.[to]?.status)];
-        line_style = "solid";
-      } else {
-        const relay = byPeer.get(to)?.reachable && byPeer.get(to)?.data?.relay?.[from];
-        if (!relay) {
-          color = colors.unknown;
-          line_style = "solid";
-        } else {
-          const age = Date.now() - new Date(relay.received_at).getTime() - (skews.get(to) ?? 0);
-          if (age > RELAY_STALE_MS) {
-            color = colors.unknown;
-            line_style = "dashed";
-          } else {
-            color = relay.peers?.[to]?.status === "up" ? colors.up : colors.unknown;
-            line_style = "dashed";
-          }
-        }
-      }
-
-      edges.push({
-        data: { id: `${from}->${to}`, source: from, target: to, color, line_style }
-      });
-    }
-  }
+  const edges = PEERS.flatMap((from) =>
+    PEERS
+      .filter((to) => from !== to)
+      .map((to) => {
+        const { color, lineStyle } = edgeStyle(from, to, byPeer, skews);
+        return { data: { id: `${from}->${to}`, source: from, target: to, color, lineStyle } };
+      })
+  );
 
   const cy = cytoscape({
     container: document.querySelector("#graph"),
@@ -185,7 +157,7 @@ function renderGraph(results, skews) {
         selector: "edge",
         style: {
           "line-color": "data(color)",
-          "line-style": "data(line_style)",
+          "line-style": "data(lineStyle)",
           "target-arrow-color": "data(color)",
           "target-arrow-shape": "triangle",
           "curve-style": "bezier",
@@ -199,8 +171,31 @@ function renderGraph(results, skews) {
   cy.fit(undefined, 10);
 }
 
+function normalizeStatus(status) {
+  return status === "up" || status === "down" ? status : "unknown";
+}
+
+function edgeStyle(from, to, byPeer, skews) {
+  const fromResult = byPeer.get(from);
+
+  if (fromResult?.reachable) {
+    const status = normalizeStatus(fromResult.data.peers?.[to]?.status);
+    return { color: EDGE_COLORS[status], lineStyle: "solid" };
+  }
+
+  const toResult = byPeer.get(to);
+  const relay = toResult?.reachable ? toResult.data?.relay?.[from] : null;
+  if (!relay) return { color: EDGE_COLORS.unknown, lineStyle: "solid" };
+
+  const age = Date.now() - new Date(relay.received_at).getTime() - (skews.get(to) ?? 0);
+  if (age > RELAY_STALE_MS) return { color: EDGE_COLORS.unknown, lineStyle: "dashed" };
+
+  const status = relay.peers?.[to]?.status === "up" ? "up" : "unknown";
+  return { color: EDGE_COLORS[status], lineStyle: "dashed" };
+}
+
 Promise.all(PEERS.map(probe)).then((results) => {
-  const skews = clockSkews(results);
-  render(consensus(results, skews));
+  const skews = calculateClockSkews(results);
+  renderTable(results, skews);
   renderGraph(results, skews);
 });
