@@ -122,7 +122,7 @@ function renderGraph(results) {
         } else {
           const age = Date.now() - new Date(relay.received_at).getTime();
           if (age > RELAY_STALE_MS) {
-            color = colors.down;
+            color = colors.unknown;
             line_style = "solid";
           } else {
             color = relay.peers?.[to]?.status === "up" ? colors.up : colors.unknown;
