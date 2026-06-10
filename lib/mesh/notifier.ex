@@ -7,7 +7,7 @@ defmodule Mesh.Notifier do
 
   def notify(peer, status, opts \\ []) do
     if url = Application.fetch_env!(:mesh, :webhook_url) do
-      body = %{content: content(peer, status, opts)}
+      body = %{content: content(peer, status, opts), username: "Mesh: #{Mesh.me()}"}
 
       case Req.post(url, json: body, retry: false) do
         {:ok, %{status: status}} when status in 200..299 ->
