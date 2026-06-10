@@ -7,6 +7,7 @@ const PEERS = [
 
 const POLL_INTERVAL_MS = 5_000;
 const RELAY_STALE_MS = 4 * POLL_INTERVAL_MS;
+const CLOCK_SKEW_MS = 2 * 60_000;
 
 async function probe(peer) {
   try {
@@ -18,18 +19,39 @@ async function probe(peer) {
   }
 }
 
-function relayStatus(results, target) {
+function clockSkews(results) {
+  return new Map(results.map((r) => {
+    if (!r.reachable || !r.data?.relay) return [r.peer, 0];
+    let max = 0;
+    for (const entry of Object.values(r.data.relay)) {
+      const received = new Date(entry.received_at).getTime();
+      for (const peer of Object.values(entry.peers ?? {})) {
+        const skew = new Date(peer.last_seen).getTime() - received;
+        if (skew > max) max = skew;
+      }
+    }
+    return [r.peer, Math.min(max, CLOCK_SKEW_MS)];
+  }));
+}
+
+function relayStatus(results, skews, target) {
   let best = null;
+  let bestAdjusted = -Infinity;
   for (const r of results) {
     if (!r.reachable || r.peer === target) continue;
     const entry = r.data?.relay?.[target];
-    if (entry && (!best || entry.received_at > best.received_at)) best = entry;
+    if (!entry) continue;
+    const adjusted = new Date(entry.received_at).getTime() + (skews.get(r.peer) ?? 0);
+    if (adjusted > bestAdjusted) {
+      best = entry;
+      bestAdjusted = adjusted;
+    }
   }
   if (!best) return null;
-  return Date.now() - new Date(best.received_at).getTime() > RELAY_STALE_MS ? "stale" : "fresh";
+  return Date.now() - bestAdjusted > RELAY_STALE_MS ? "stale" : "fresh";
 }
 
-function consensus(results) {
+function consensus(results, skews) {
   const byPeer = new Map(results.map((r) => [r.peer, r]));
 
   return PEERS.map((target) => {
@@ -53,7 +75,7 @@ function consensus(results) {
         title = `unreachable from: ${downFrom.map((o) => o.peer).join(", ")}`;
       }
 
-      const relay = relayStatus(results, target);
+      const relay = relayStatus(results, skews, target);
       if (relay === "fresh") detail += ", outbound fine";
       else if (relay === "stale") detail += ", outbound stale";
 
@@ -94,7 +116,7 @@ function render(rows) {
   document.querySelector("#meta").textContent = `last updated at ${new Date().toLocaleTimeString()}`;
 }
 
-function renderGraph(results) {
+function renderGraph(results, skews) {
   const byPeer = new Map(results.map((r) => [r.peer, r]));
   const normalize = (v) => (v === "up" || v === "down" ? v : "unknown");
   const colors = { up: "#2a7", down: "#c33", unknown: "#888" };
@@ -120,7 +142,7 @@ function renderGraph(results) {
           color = colors.unknown;
           line_style = "solid";
         } else {
-          const age = Date.now() - new Date(relay.received_at).getTime();
+          const age = Date.now() - new Date(relay.received_at).getTime() - (skews.get(to) ?? 0);
           if (age > RELAY_STALE_MS) {
             color = colors.unknown;
             line_style = "dashed";
@@ -178,6 +200,7 @@ function renderGraph(results) {
 }
 
 Promise.all(PEERS.map(probe)).then((results) => {
-  render(consensus(results));
-  renderGraph(results);
+  const skews = clockSkews(results);
+  render(consensus(results, skews));
+  renderGraph(results, skews);
 });
