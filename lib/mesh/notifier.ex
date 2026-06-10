@@ -7,7 +7,7 @@ defmodule Mesh.Notifier do
 
   def notify(peer, status, opts \\ []) do
     if url = Application.fetch_env!(:mesh, :webhook_url) do
-      body = %{content: content(peer, status, opts), username: "Mesh: #{Mesh.me()}"}
+      body = %{content: content(peer, status, opts), username: Mesh.me()}
 
       case Req.post(url, json: body, retry: false) do
         {:ok, %{status: status}} when status in 200..299 ->
@@ -25,21 +25,21 @@ defmodule Mesh.Notifier do
   defp content(peer, :up, opts) do
     case Keyword.get(opts, :downtime_since) do
       nil ->
-        "🟢 `#{peer}` is reachable again from `#{Mesh.me()}`"
+        "🟢 `#{peer}` is reachable again`"
 
       since ->
         duration = format_duration(DateTime.diff(DateTime.utc_now(), since, :second))
-        "🟢 `#{peer}` is reachable again from `#{Mesh.me()}` (was unreachable for #{duration})"
+        "🟢 `#{peer}` is reachable again (was unreachable for #{duration})"
     end
   end
 
   defp content(peer, :down, _opts) do
-    "🔴 `#{peer}` is unreachable from `#{Mesh.me()}`"
+    "🔴 `#{peer}` is unreachable`"
   end
 
   defp content(peer, :still_down, _opts) do
     duration = format_duration(DateTime.diff(DateTime.utc_now(), Store.get(peer).since, :second))
-    "🟠 `#{peer}` is still unreachable from `#{Mesh.me()}` (#{duration})"
+    "🟠 `#{peer}` is still unreachable (for #{duration})"
   end
 
   defp format_duration(seconds) do
