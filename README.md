@@ -53,7 +53,7 @@ The implemented aggregator running at [mesh.dupunkto.org](https://mesh.dupunkto.
 
   The `relay` field contains the most recently received state from each peer. This allows the aggregator to reconstruct a peer's outbound connections even if it cannot reach that peer directly.
 
-- `POST /relay`: accepts a peer's state and stores it, returns:
+- `POST /relay`: accepts a peer's state and stores it, payload:
 
   ```json
   {
