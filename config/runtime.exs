@@ -34,9 +34,7 @@ config :mesh,
   peers: peers,
   aggregator_url: System.get_env("AGGREGATOR_URL"),
   webhook_url: System.get_env("WEBHOOK_URL"),
-  relay_secret:
-    System.get_env("RELAY_SECRET") ||
-      raise("environment variable RELAY_SECRET is missing")
+  relay_secret: System.get_env("RELAY_SECRET")
 
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.

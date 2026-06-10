@@ -17,20 +17,23 @@ defmodule MeshWeb.APIController do
   end
 
   def relay(conn, %{"node" => from, "peers" => peers}) do
-    expected = Application.fetch_env!(:mesh, :relay_secret)
-    known = Application.get_env(:mesh, :peers, [])
+    secret = Application.get_env(:mesh, :relay_secret)
+    known_peers = Application.get_env(:mesh, :peers, [])
 
-    case get_req_header(conn, "authorization") do
-      [^expected] ->
-        if from in known do
+    case {secret, get_req_header(conn, "authorization")} do
+      {nil, _} ->
+        conn |> put_status(501) |> json(%{error: "relay is disabled"}) |> halt()
+
+      {secret, [^secret]} ->
+        if from in known_peers do
           Store.put_relay(from, peers)
           json(conn, %{ok: true})
         else
-          conn |> put_status(:forbidden) |> json(%{error: "unknown node"}) |> halt()
+          conn |> put_status(401) |> json(%{error: "unknown node"}) |> halt()
         end
 
       _ ->
-        conn |> put_status(:unauthorized) |> json(%{error: "unauthorized"}) |> halt()
+        conn |> put_status(403) |> json(%{error: "unauthorized"}) |> halt()
     end
   end
 end

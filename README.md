@@ -10,7 +10,7 @@ Every node runs an identical Mesh instance, which polls its peers on a fixed int
 
 The implemented aggregator running at [mesh.dupunkto.org](https://mesh.dupunkto.org) is static HTML served by GitHub Pages, that uses the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) to pull states from all nodes in the cluster.
 
-> This means the status page is dependent on the network condition of the user, but it also prevents a single server, and thus a single point of failure.
+> This means the status page is dependent on the network condition of the user, but it also prevents a single server, and thus a single point of failure. (This is partially resolved by utilizing relay data to retrieve information about unreachable nodes. More on that later.)
 
 ## Endpoints
 
@@ -53,7 +53,7 @@ The implemented aggregator running at [mesh.dupunkto.org](https://mesh.dupunkto.
 
   The `relay` field contains the most recently received state from each peer. This allows the aggregator to reconstruct a peer's outbound connections even if it cannot reach that peer directly.
 
-- `POST /relay`: accepts a peer's state and stores it. Requires an `Authorization` header matching the shared `RELAY_SECRET`. Body:
+- `POST /relay`: accepts a peer's state and stores it, returns:
 
   ```json
   {
@@ -69,19 +69,21 @@ The implemented aggregator running at [mesh.dupunkto.org](https://mesh.dupunkto.
   }
   ```
 
+  Requires an `Authorization` header matching the shared `RELAY_SECRET`.
+
 ## Deployment
 
 Configure the following environment variables:
 
 - `PEERS`: comma-separated peer hostnames. Required, the app will not boot without.
 
-- `WEBHOOK_URL`: optional Discord or Slack incoming webhook for notifications. See more in the following section.
+- `WEBHOOK_URL`: optional Discord or Slack incoming webhook for notifications. See more in the following section. If not given, webhooks will be disabled.
 
 - `NODE`: a unique identifier for the node. Used in webhook messages and returned in the `node` field of `/state`. Defaults to the system hostname if not given.
 
 - `AGGREGATOR_URL`: a URL to the mesh aggregator. This is only used to redirect from `/` to the aggregator page. Defaults to `https://mesh.dupunkto.org` if not given.
 
-- `RELAY_SECRET`: shared secret used to authenticate `POST /relay` requests between nodes. All nodes in the cluster must use the same value. Required, the app will not boot without.
+- `RELAY_SECRET`: optional shared secret used to authenticate relay requests between nodes. All nodes in the cluster must use the same value. If not given, relaying will be disabled.
 
 A prebuilt docker image is available at [ghcr.io/dupunkto/mesh](https://github.com/dupunkto/mesh/pkgs/container/mesh).
 

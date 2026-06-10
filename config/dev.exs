@@ -34,8 +34,6 @@ config :phoenix, :stacktrace_depth, 20
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
 
-config :mesh, relay_secret: "dev-secret"
-
 config :phoenix_live_view,
   # Include HEEx debug annotations as HTML comments in rendered markup
   debug_heex_annotations: true,
