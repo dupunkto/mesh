@@ -10,8 +10,7 @@ defmodule Mesh.Monitor do
   @poll_interval :timer.seconds(5)
   @followup_interval :timer.minutes(30)
   @timeout :timer.seconds(5)
-  # send down notification after 4 missed pings
-  @threshold 4
+  @threshold 4 # send down notification after 4 missed pings
 
   def start_link(peer) do
     GenServer.start_link(__MODULE__, peer)
@@ -30,7 +29,6 @@ defmodule Mesh.Monitor do
       {:error, reason} -> on_failure(peer, reason)
     end
 
-    Mesh.Relay.poll_complete(peer)
     schedule_poll(@poll_interval)
     {:noreply, peer}
   end
@@ -55,12 +53,12 @@ defmodule Mesh.Monitor do
 
     case current.status do
       :up ->
-        Store.put(peer, %{current | last_seen: now, consecutive_failures: 0})
+        Store.put_status(peer, %{current | last_seen: now, consecutive_failures: 0})
 
       :down ->
         downtime_since = current.since
 
-        Store.put(peer, %{
+        Store.put_status(peer, %{
           status: :up,
           since: now,
           last_seen: now,
@@ -70,7 +68,7 @@ defmodule Mesh.Monitor do
         Notifier.notify(peer, :up, downtime_since: downtime_since)
 
       :unknown ->
-        Store.put(peer, %{
+        Store.put_status(peer, %{
           status: :up,
           since: now,
           last_seen: now,
@@ -87,11 +85,11 @@ defmodule Mesh.Monitor do
     Logger.warning("ping #{peer} failed: #{inspect(reason)} (#{failures}/#{@threshold})")
 
     if failures >= @threshold and state.status != :down do
-      Store.put(peer, %{state | status: :down, since: now, consecutive_failures: failures})
+      Store.put_status(peer, %{state | status: :down, since: now, consecutive_failures: failures})
       Notifier.notify(peer, :down)
       schedule_followup(@followup_interval)
     else
-      Store.put(peer, %{state | consecutive_failures: failures})
+      Store.put_status(peer, %{state | consecutive_failures: failures})
     end
   end
 

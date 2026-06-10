@@ -13,7 +13,7 @@ defmodule MeshWeb.APIController do
   end
 
   def state(conn, _params) do
-    json(conn, %{node: Mesh.me(), peers: Store.all(), relay: Store.all_relays()})
+    json(conn, %{node: Mesh.me(), peers: Store.peers(), relay: Store.relays()})
   end
 
   def relay(conn, %{"node" => from, "peers" => peers}) do
@@ -24,7 +24,7 @@ defmodule MeshWeb.APIController do
       {nil, _} ->
         conn |> put_status(501) |> json(%{error: "relay is disabled"}) |> halt()
 
-      {secret, [^secret]} ->
+      {secret, [secret]} ->
         if from in known_peers do
           Store.put_relay(from, peers)
           json(conn, %{ok: true})
