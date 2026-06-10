@@ -123,7 +123,7 @@ function renderGraph(results) {
           const age = Date.now() - new Date(relay.received_at).getTime();
           if (age > RELAY_STALE_MS) {
             color = colors.unknown;
-            line_style = "solid";
+            line_style = "dashed";
           } else {
             color = relay.peers?.[to]?.status === "up" ? colors.up : colors.unknown;
             line_style = "dashed";
