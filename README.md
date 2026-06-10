@@ -92,19 +92,19 @@ A prebuilt docker image is available at [ghcr.io/dupunkto/mesh](https://github.c
 Optional Discord or Slack webhooks can be configured using the `WEBHOOK_URL` environment variable. The payload looks like:
 
 ```json
-{"content": "🔴 `dec.mesh.dupunkto.org` is unreachable from `nov.mesh.dupunkto.org`"}
+{"content": "🔴 `dec.mesh.dupunkto.org` is unreachable", "username": "nov.mesh.dupunkto.org"}
 ```
 
 On recovery, including how long the peer was unreachable:
 
 ```json
-{"content": "🟢 `dec.mesh.dupunkto.org` is reachable again from `nov.mesh.dupunkto.org` (was unreachable for 4m 32s)"}
+{"content": "🟢 `dec.mesh.dupunkto.org` is reachable again (down for 4m 32s)", "username": "nov.mesh.dupunkto.org"}
 ```
 
 If a peer remains unreachable, a follow-up is sent every 30 minutes:
 
 ```json
-{"content": "🟠 `dec.mesh.dupunkto.org` is still unreachable from `nov.mesh.dupunkto.org` (35m 12s)"}
+{"content": "🟠 `dec.mesh.dupunkto.org` is still unreachable (down for 35m 12s)", "username": "nov.mesh.dupunkto.org"}
 ```
 
 This webhook will be called upon every status transition, except the initial change from `:unknown` to `:up` on application boot, to reduce log spam.
