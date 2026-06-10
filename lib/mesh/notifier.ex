@@ -25,7 +25,7 @@ defmodule Mesh.Notifier do
   defp content(peer, :up, opts) do
     case Keyword.get(opts, :downtime_since) do
       nil ->
-        "🟢 `#{peer}` is reachable again`"
+        "🟢 `#{peer}` is reachable again"
 
       since ->
         duration = format_duration(DateTime.diff(DateTime.utc_now(), since, :second))
@@ -34,7 +34,7 @@ defmodule Mesh.Notifier do
   end
 
   defp content(peer, :down, _opts) do
-    "🔴 `#{peer}` is unreachable`"
+    "🔴 `#{peer}` is unreachable"
   end
 
   defp content(peer, :still_down, _opts) do
