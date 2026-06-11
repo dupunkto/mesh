@@ -194,8 +194,12 @@ function edgeStyle(from, to, byPeer, skews) {
   return { color: EDGE_COLORS[status], lineStyle: "dashed" };
 }
 
-Promise.all(PEERS.map(probe)).then((results) => {
+async function refresh() {
+  const results = await Promise.all(PEERS.map(probe));
   const skews = calculateClockSkews(results);
   renderTable(results, skews);
   renderGraph(results, skews);
-});
+}
+
+refresh();
+setInterval(refresh, POLL_INTERVAL_MS);
