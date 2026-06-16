@@ -6,14 +6,18 @@ const PEERS = [
 ];
 
 const POLL_INTERVAL_MS = 5_000;
+const PROBE_TIMEOUT_MS = 4_000;
 const RELAY_STALE_MS = 4 * POLL_INTERVAL_MS;
 const CLOCK_SKEW_MS = 2 * 60_000;
 
 const EDGE_COLORS = { up: "#2a7", down: "#c33", unknown: "#888" };
 
 async function probe(peer) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
   try {
-    const res = await fetch(`https://${peer}/state`);
+    const res = await fetch(`https://${peer}/state`, { signal: controller.signal });
+    clearTimeout(timer);
     if (!res.ok) return { peer, reachable: false };
     return { peer, reachable: true, data: await res.json() };
   } catch {
