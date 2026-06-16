@@ -8,7 +8,13 @@ defmodule Mesh.Monitor do
   require Logger
 
   @poll_interval :timer.seconds(5)
-  @followup_interval :timer.minutes(30)
+  @followup_intervals [
+    :timer.minutes(15),
+    :timer.minutes(30),
+    :timer.hours(1),
+    :timer.hours(2),
+    :timer.hours(5)
+  ]
   @timeout :timer.seconds(5)
   @threshold 4 # send down notification after 4 missed pings
 
@@ -19,24 +25,24 @@ defmodule Mesh.Monitor do
   @impl true
   def init(peer) do
     schedule_poll(0)
-    {:ok, peer}
+    {:ok, {peer, 0}}
   end
 
   @impl true
-  def handle_info(:poll, peer) do
-    case ping(peer) do
-      :ok -> on_success(peer)
-      {:error, reason} -> on_failure(peer, reason)
+  def handle_info(:poll, {peer, step}) do
+    step = case ping(peer) do
+      :ok -> on_success(peer, step)
+      {:error, reason} -> on_failure(peer, reason, step)
     end
 
     schedule_poll(@poll_interval)
-    {:noreply, peer}
+    {:noreply, {peer, step}}
   end
 
   @impl true
-  def handle_info(:followup, peer) do
-    on_followup(peer)
-    {:noreply, peer}
+  def handle_info(:followup, {peer, step}) do
+    step = on_followup(peer, step)
+    {:noreply, {peer, step}}
   end
 
   defp ping(peer) do
@@ -47,13 +53,14 @@ defmodule Mesh.Monitor do
     end
   end
 
-  defp on_success(peer) do
+  defp on_success(peer, step) do
     now = DateTime.utc_now()
     current = Store.get(peer)
 
     case current.status do
       :up ->
         Store.put_status(peer, %{current | last_seen: now, consecutive_failures: 0})
+        step
 
       :down ->
         downtime_since = current.since
@@ -66,6 +73,7 @@ defmodule Mesh.Monitor do
         })
 
         Notifier.notify(peer, :up, downtime_since: downtime_since)
+        0
 
       :unknown ->
         Store.put_status(peer, %{
@@ -74,10 +82,11 @@ defmodule Mesh.Monitor do
           last_seen: now,
           consecutive_failures: 0
         })
+        step
     end
   end
 
-  defp on_failure(peer, reason) do
+  defp on_failure(peer, reason, step) do
     now = DateTime.utc_now()
     state = Store.get(peer)
     failures = state.consecutive_failures + 1
@@ -87,16 +96,22 @@ defmodule Mesh.Monitor do
     if failures >= @threshold and state.status != :down do
       Store.put_status(peer, %{state | status: :down, since: now, consecutive_failures: failures})
       Notifier.notify(peer, :down)
-      schedule_followup(@followup_interval)
+      schedule_followup(Enum.at(@followup_intervals, 0))
+      0
     else
       Store.put_status(peer, %{state | consecutive_failures: failures})
+      step
     end
   end
 
-  defp on_followup(peer) do
+  defp on_followup(peer, step) do
     if Store.get(peer).status == :down do
       Notifier.notify(peer, :still_down)
-      schedule_followup(@followup_interval)
+      next_step = min(step + 1, length(@followup_intervals) - 1)
+      schedule_followup(Enum.at(@followup_intervals, next_step))
+      next_step
+    else
+      step
     end
   end
 
