@@ -56,7 +56,6 @@ defmodule Mesh.Monitor do
 
   defp ping(peer) do
     opts = [
-      connect_options: [timeout: @timeout],
       receive_timeout: @timeout,
       retry: false,
       finch: Mesh.Finch

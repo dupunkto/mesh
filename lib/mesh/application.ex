@@ -4,15 +4,10 @@ defmodule Mesh.Application do
 
   @impl true
   def start(_type, _args) do
-    # HTTP2 reuses connections, which caused us to *not* detect downtime
-    # because the existing connection stayed intact. So HTTP1 it is.
-    idle_time = Mesh.Monitor.poll_interval() - :timer.seconds(1)
-    pools = %{default: [protocols: [:http1], conn_max_idle_time: idle_time]}
-
     children =
       [
         MeshWeb.Telemetry,
-        {Finch, name: Mesh.Finch, pools: pools},
+        {Finch, name: Mesh.Finch, pools: pools()},
         {Phoenix.PubSub, name: Mesh.PubSub},
         MeshWeb.Endpoint,
         {Mesh.Store, peers()}
@@ -20,6 +15,24 @@ defmodule Mesh.Application do
 
     opts = [strategy: :one_for_one, name: Mesh.Supervisor]
     Supervisor.start_link(children ++ monitors() ++ relays(), opts)
+  end
+
+  defp pools do
+    # HTTP2 reuses connections, which caused us to *not* detect downtime
+    # because the existing connection stayed intact. So HTTP1 it is.
+    idle_time = Mesh.Monitor.poll_interval() - :timer.seconds(1)
+
+    pools = %{
+      default: [
+        protocols: [:http1],
+        conn_max_idle_time: idle_time,
+        conn_opts: [
+          transport_opts: [
+            timeout: Mesh.Monitor.timeout()
+          ]
+        ]
+      ]
+    }
   end
 
   defp peers do
