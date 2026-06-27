@@ -8,6 +8,7 @@ defmodule Mesh.Monitor do
   require Logger
 
   @poll_interval :timer.seconds(5)
+
   @followup_intervals [
     :timer.minutes(15),
     :timer.minutes(30),
@@ -15,8 +16,15 @@ defmodule Mesh.Monitor do
     :timer.hours(2),
     :timer.hours(5)
   ]
+
+  def poll_interval, do: @poll_interval
+  def followup_intervals, do: @followup_intervals
+
   @timeout :timer.seconds(5)
+  def timeout, do: @timeout
+
   @threshold 4 # send down notification after 4 missed pings
+  def threshold, do: @threshold
 
   def start_link(peer) do
     GenServer.start_link(__MODULE__, peer)
@@ -30,10 +38,11 @@ defmodule Mesh.Monitor do
 
   @impl true
   def handle_info(:poll, {peer, step}) do
-    step = case ping(peer) do
-      :ok -> on_success(peer, step)
-      {:error, reason} -> on_failure(peer, reason, step)
-    end
+    step =
+      case ping(peer) do
+        :ok -> on_success(peer, step)
+        {:error, reason} -> on_failure(peer, reason, step)
+      end
 
     schedule_poll(@poll_interval)
     {:noreply, {peer, step}}
@@ -46,7 +55,14 @@ defmodule Mesh.Monitor do
   end
 
   defp ping(peer) do
-    case Req.get("https://#{peer}/ping", receive_timeout: @timeout, retry: false) do
+    opts = [
+      connect_options: [timeout: @timeout],
+      receive_timeout: @timeout,
+      retry: false,
+      finch: Mesh.Finch
+    ]
+
+    case Req.get("https://#{peer}/ping", opts) do
       {:ok, %{status: 200}} -> :ok
       {:ok, %{status: status}} -> {:error, {:http, status}}
       {:error, reason} -> {:error, reason}
