@@ -7,7 +7,7 @@ defmodule Mesh.Application do
     # HTTP2 reuses connections, which caused us to *not* detect downtime
     # because the existing connection stayed intact. So HTTP1 it is.
     idle_time = Mesh.Monitor.poll_interval() - :timer.seconds(1)
-    pools = %{default: [protocols: [:http1], pool_max_idle_time: idle_time]}
+    pools = %{default: [protocols: [:http1], conn_max_idle_time: idle_time]}
 
     children =
       [
