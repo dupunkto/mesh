@@ -101,7 +101,7 @@ On recovery, including how long the peer was unreachable:
 {"content": "🟢 `dec.mesh.dupunkto.org` is reachable again (down for 4m 32s)", "username": "nov.mesh.dupunkto.org"}
 ```
 
-If a peer remains unreachable, a follow-up is sent every 30 minutes:
+If a peer remains unreachable, follow-ups are sent at increasing intervals (15m, 30m, 1h, 2h, 5h):
 
 ```json
 {"content": "🟠 `dec.mesh.dupunkto.org` is still unreachable (down for 35m 12s)", "username": "nov.mesh.dupunkto.org"}
