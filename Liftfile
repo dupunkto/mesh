@@ -1,5 +1,4 @@
 image: dupunkto/mesh
-registry: ghcr.io
 services:
 - name: mesh
   host: nov
