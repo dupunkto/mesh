@@ -23,7 +23,7 @@ defmodule Mesh.Monitor do
   @timeout :timer.seconds(5)
   def timeout, do: @timeout
 
-  @threshold 4 # send down notification after 4 missed pings
+  @threshold 9 # send down notification after 9 missed pings
   def threshold, do: @threshold
 
   def start_link(peer) do
