@@ -1,23 +1,8 @@
 #!/bin/bash
 
-setup() {
-	mix deps.get
-	mix deps.compile
-}
-
-serve() {
-  mix phx.server
-}
+use elixir
+use phoenix
 
 deploy() {
 	lift deploy mesh
-}
-
-publish() {
-	mix docs
-	lift deploy docs
-}
-
-release() {
-	mix hex.publish
 }
