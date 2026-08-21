@@ -1,13 +1,11 @@
 image: dupunkto/mesh
 services:
 - name: mesh
-  host: nov
-  push: true
+  host: nov.dupunk.to
 - name: mesh
-  host: dec
-  push: false
+  host: dec.dupunk.to
 - name: docs
-  host: nov
+  host: nov.dupunk.to
   type: static
   src: doc
   target: docs.dupunkto.org/mesh
