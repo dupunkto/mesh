@@ -1,4 +1,7 @@
 image: dupunkto/mesh
+registry:
+  - ducr.io
+  - ghcr.io
 services:
 - name: mesh
   host: nov.dupunk.to
