@@ -7,6 +7,8 @@ services:
   runner: nov.dupunk.to
 - name: mesh
   runner: dec.dupunk.to
+- name: mesh
+  runner: oct.dupunk.to
 - name: docs
   runner: nov.dupunk.to
   type: static
