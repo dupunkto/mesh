@@ -2,7 +2,8 @@ const PEERS = [
   "nov.mesh.dupunkto.org",
   "dec.mesh.dupunkto.org",
   "jun.mesh.dupunkto.org",
-  "feb.mesh.dupunkto.org"
+  "feb.mesh.dupunkto.org",
+  "oct.mesh.dupunkto.org",
 ];
 
 const POLL_INTERVAL_MS = 5_000;
